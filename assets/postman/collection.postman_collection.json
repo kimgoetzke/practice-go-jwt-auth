@@ -1,0 +1,311 @@
+{
+	"info": {
+		"_postman_id": "60d8b060-f715-43e1-9166-c6b4aa377fee",
+		"name": "Go JWT authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25192558"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful POST request\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+							"\r",
+							"    let requestData = pm.request.body.formdata;\r",
+							"    if (requestData) {\r",
+							"        let usernameField = requestData.find(item => item.key === 'username');\r",
+							"        if (usernameField && usernameField.value) {\r",
+							"            pm.collectionVariables.set('UserName', usernameField.value);\r",
+							"            console.log(`Collection variable 'UserName' set to: ${usernameField.value}`);\r",
+							"        } else {\r",
+							"            console.error(\"Username field not found in the request body.\");\r",
+							"        }\r",
+							"        let passwordField = requestData.find(item => item.key === 'password');\r",
+							"        if (passwordField && passwordField.value) {\r",
+							"            pm.collectionVariables.set('Password', passwordField.value);\r",
+							"            console.log(`Collection variable 'Password' set to: ${passwordField.value}`);\r",
+							"        } else {\r",
+							"            console.error(\"Password field not found in the request body.\");\r",
+							"        }\r",
+							"    } else {\r",
+							"        console.error(\"Form data is not available in the request.\");\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "Test",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Password1!",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {\r",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);\r",
+							"\r",
+							"    let csrfToken = pm.cookies.get('csrf_token');\r",
+							"    if (csrfToken) {\r",
+							"        pm.collectionVariables.set('CsrfToken', csrfToken);\r",
+							"        console.log(`Collection variable 'CsrfToken' set to: ${csrfToken}`);\r",
+							"    } else {\r",
+							"        console.error(\"csrf_token cookie not found in the response.\");\r",
+							"    }\r",
+							"\r",
+							"    let jwt = pm.cookies.get('jwt');\r",
+							"    if (jwt) {\r",
+							"        pm.collectionVariables.set('Jwt', jwt);\r",
+							"        console.log(`Collection variable 'Jwt' set to: ${jwt}`);\r",
+							"    } else {\r",
+							"        console.error(\"jwt cookie not found in the response.\");\r",
+							"    }\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "{{UserName}}",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "{{Password}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([200, 201, 202]);",
+							"",
+							"    pm.collectionVariables.set('CsrfToken', '');",
+							"    console.log(`Collection variable 'CsrfToken' removed`);",
+							"",
+							"    pm.collectionVariables.set('Jwt', '');",
+							"    console.log(`Collection variable 'JWT' removed`);",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRF-Token",
+						"value": "{{CsrfToken}}"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{Jwt}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "http://localhost:8080/logout",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Protected",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-CSRF-Token",
+						"value": "{{CsrfToken}}"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{Jwt}}"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "http://localhost:8080/protected",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"protected"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/.well-known/jwks.json",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/.well-known/jwks.json",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						".well-known",
+						"jwks.json"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "UserName",
+			"value": ""
+		},
+		{
+			"key": "Password",
+			"value": ""
+		},
+		{
+			"key": "CsrfToken",
+			"value": ""
+		},
+		{
+			"key": "Jwt",
+			"value": ""
+		}
+	]
+}
