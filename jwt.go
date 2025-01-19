@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	Audience      = "audience"
-	Issuer        = "organisation"
-	Authorization = "Authorization"
+	audience            = "audience"
+	issuer              = "organisation"
+	authorizationHeader = "Authorization"
 )
 
 type AuthorisedUser struct {
@@ -82,9 +82,9 @@ func createJwt(user User) (string, error) {
 	claims := CustomClaims{
 		user.Name,
 		jwt.RegisteredClaims{
-			Issuer:    Issuer,
+			Issuer:    issuer,
 			Subject:   user.Id,
-			Audience:  []string{Audience},
+			Audience:  []string{audience},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(Duration)),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -101,10 +101,10 @@ func createJwt(user User) (string, error) {
 	}
 }
 
-// Validates the JWT provided in the Authorization header of the request.
+// Validates the JWT provided in the authorizationHeader header of the request.
 // It returns the AuthorisedUser if the JWT is valid, otherwise it returns an error.
 func validateJwt(request *http.Request) (AuthorisedUser, error) {
-	tokenString := strings.TrimPrefix(request.Header.Get(Authorization), "Bearer")
+	tokenString := strings.TrimPrefix(request.Header.Get(authorizationHeader), "Bearer")
 	tokenString = strings.TrimSpace(tokenString)
 	if tokenString == "" {
 		log.Warning("Validation failed: No JWT provided")
@@ -113,7 +113,11 @@ func validateJwt(request *http.Request) (AuthorisedUser, error) {
 
 	// Parse the JWT without verifying its signature, just to separate error logging.
 	// This block can be commented out without affecting the functionality.
-	_, _, err := jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name}), jwt.WithAudience(Audience), jwt.WithIssuer(Issuer)).ParseUnverified(tokenString, &CustomClaims{})
+	_, _, err := jwt.NewParser(
+		jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name}),
+		jwt.WithAudience(audience),
+		jwt.WithIssuer(issuer),
+	).ParseUnverified(tokenString, &CustomClaims{})
 	if err != nil {
 		log.Warningf("Failed to parse JWT: %v\n", err)
 		return AuthorisedUser{}, InvalidJwtError
@@ -130,7 +134,14 @@ func validateJwt(request *http.Request) (AuthorisedUser, error) {
 		return AuthorisedUser{}, err
 	}
 
-	verifiedToken, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, jwks.Keyfunc, jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name}), jwt.WithAudience(Audience), jwt.WithIssuer(Issuer))
+	verifiedToken, err := jwt.ParseWithClaims(
+		tokenString,
+		&CustomClaims{},
+		jwks.Keyfunc,
+		jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name}),
+		jwt.WithAudience(audience),
+		jwt.WithIssuer(issuer),
+	)
 	if err != nil {
 		log.Warningf("Failed to verify JWT signature: %v\n", err)
 		return AuthorisedUser{}, err
